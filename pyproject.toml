@@ -1,0 +1,36 @@
+[project]
+name = "specpol"
+version = "v0.0.1"
+description = 'Module for analysing operator spectra and spectral pollution'
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = []
+authors = [
+  { name = "Alex H. Room", email = "alex.room@btinternet.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+  "numpy"
+]
+
+[project.urls]
+Documentation = "https://github.com/alexhroom/specpol#readme"
+Issues = "https://github.com/alexhroom/specpol/issues"
+Source = "https://github.com/alexhroom/specpol"
+
+[tool.ruff]
+select = ["E4", "E7", "E9", "C90", "F", "I", "A", "SIM", "ERA", "PL"]
+extend-include = ["*.ipynb"]
+line-length = 100
+
+[tool.ruff.format]
