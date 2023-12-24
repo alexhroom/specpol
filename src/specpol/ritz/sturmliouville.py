@@ -3,28 +3,26 @@ from functools import lru_cache
 from typing import Callable, Tuple
 
 import numpy as np
-from scipy.special import roots_laguerre
 from pyfilon import filon_fun_iexp
 
-from specpol.common import generate_matrix, lagdiff, laguerre, lagquad
+from specpol.common import generate_matrix, lagdiff, lagquad, laguerre
 
 
-def ritz_sturm_liouville(
+def sturm_liouville_bdd(
     potential: Callable,
     domain_len: float,
     matrix_size: int,
     quad_mesh_size: int,
     boundary_angles: Tuple[float, float],
-    *,
-    dbm: bool = False,
+    **settings: dict,
 ) -> np.array:
-    r"""Approximate the spectrum of a Sturm-Liouville operator with potential Q.
+    r"""Approximate the spectrum of a bounded Sturm-Liouville operator with potential Q.
 
     The Sturm-Liouville operator is defined
     Ly = -y'' + Q(x)y
     with boundary conditions
-    cos(a)*y(0) + sin(a)*y(0) = 0
-    cos(b)*y(L) + sin(b)*y(L) = 0
+    cos(a)*y(0) + sin(a)*y'(0) = 0
+    cos(b)*y(L) + sin(b)*y'(L) = 0
 
     Parameters
     ----------
@@ -38,8 +36,13 @@ def ritz_sturm_liouville(
         The number of interpolation points used for quadrature.
     boundary_angles: Tuple[float, float]
         The angles a and b at the zero and domain_len boundaries respectively.
-    dbm: bool, default False
-        Whether to add a dissipative barrier to the operator.
+    settings:
+        dbm: Callable
+            Add a dissipative barrier to the operator; this is a function
+            of the form $i*\gamma*f(x)$ where f is a function with compact
+            support.
+        vectors: bool, default True
+            If true, add
     """
 
     @lru_cache(maxsize=matrix_size)
@@ -51,9 +54,8 @@ def ritz_sturm_liouville(
         def integ(x: float) -> float:
             barrier = 0
             derivative = 4 * i * j * np.pi**2 * onb_func(i)(x) / domain_len**2
-            if dbm:
-                barrier = 1j * onb_func(i)(x) * (x <= matrix_size // 2)
-            return 1/np.sqrt(domain_len) * (derivative + potential(x) * onb_func(i)(x) + barrier)
+            barrier = settings.get("dbm", lambda x: 0)(x) * onb_func(i)(x)
+            return 1 / np.sqrt(domain_len) * (derivative + potential(x) * onb_func(i)(x) + barrier)
 
         return integ
 
@@ -65,7 +67,9 @@ def ritz_sturm_liouville(
         return (
             cot_alpha
             - cot_beta
-            + filon_fun_iexp(integrand(i, j), 0, domain_len, -2 * j * np.pi / domain_len, quad_mesh_size)
+            + filon_fun_iexp(
+                integrand(i, j), 0, domain_len, -2 * j * np.pi / domain_len, quad_mesh_size
+            )
         )
 
     ritz_matrix = generate_matrix(
@@ -78,13 +82,12 @@ def ritz_sturm_liouville(
     return np.linalg.eigvals(ritz_matrix)
 
 
-def ritz_unbounded_sturm_liouville(
+def sturm_liouville_halfline(
     potential: Callable,
     matrix_size: int,
     quad_mesh_size: int,
     alpha: float,
-    *,
-    dbm: bool = False,
+    **settings,
 ) -> np.array:
     r"""Ritz method for a Sturm-Liouville operator on the half-line [0, \infty).
 
@@ -103,10 +106,12 @@ def ritz_unbounded_sturm_liouville(
         The number of interpolation points used for quadrature.
     alpha: float
         The alpha-value used in the boundary condition.
-    dbm: bool, default False
-        Whether to add a dissipative barrier to the operator.
+    settings:
+        dbm: Callable
+            Add a dissipative barrier to the operator; this is a function
+            of the form $i*\gamma*f(x)$ where f is a function with compact
+            support.
     """
-
     # the weighted Laguerre polynomials L_n * exp(-x/2) form
     # an orthonormal basis for the half-line
     # the BC's are not Dirichlet so we can use any ONB
@@ -114,12 +119,10 @@ def ritz_unbounded_sturm_liouville(
     @lru_cache(maxsize=matrix_size**2)
     def integrand(i: int, j: int) -> Callable:
         def integ(x: float) -> complex:
-            barrier = 0
             derivative = (lagdiff(i, 0, x, degree=1) + laguerre(i, 0, x) / 2) * (
                 lagdiff(j, 0, x, degree=1) + laguerre(j, 0, x) / 2
             )
-            if dbm:
-                barrier = 1j * laguerre(i, 0, x) * laguerre(j, 0, x) * (x <= matrix_size//2)
+            barrier = settings.get("dbm", lambda x: 0)(x) * laguerre(i, 0, x) * laguerre(j, 0, x)
             return derivative + potential(x) * laguerre(i, 0, x) * laguerre(j, 0, x) + barrier
 
         return np.vectorize(integ)
@@ -127,12 +130,12 @@ def ritz_unbounded_sturm_liouville(
     # we define entries by the weak formulation of the BVP:
     # $B[u, v] = \cot(\alpha)*u(0)*v(0) + \int_0^\infty u'v' + quv$
     sample_points, weights = lagquad(quad_mesh_size)
-    cot_alpha = 1/np.tan(alpha)
+    cot_alpha = 1 / np.tan(alpha)
 
     def entry_func(i: int, j: int) -> complex:
-        return cot_alpha * laguerre(i, 0, 0) * laguerre(j, 0, 0) + complex(sum(
-            integrand(i,j)(x) * w for x, w in zip(sample_points, weights)
-        ))
+        return cot_alpha * laguerre(i, 0, 0) * laguerre(j, 0, 0) + complex(
+            sum(integrand(i, j)(x) * w for x, w in zip(sample_points, weights))
+        )
 
     ritz_matrix = generate_matrix(entry_func, matrix_size, start_index=0)
 

@@ -1,7 +1,6 @@
 """Generalised Laguerre polynomials."""
 import warnings
 from functools import lru_cache
-from typing import Callable
 
 import mpmath as mp
 import numpy as np
@@ -30,7 +29,7 @@ def laguerre(n: int, a: float, x: complex) -> complex:
         return 1
     if n == 1:
         return -x + a + 1
-    if n == 2:
+    if n == 2:  # noqa: PLR2004
         return x**2 / 2 - (a + 2) * x + (a + 1) * (a + 2) / 2
     return (2 + (a - 1 - x) / n) * laguerre(n - 1, a, x) - (1 + (a - 1) / n) * laguerre(n - 2, a, x)
 
@@ -60,8 +59,7 @@ def lagdiff(n: int, a: float, x: complex, *, degree: int) -> complex:
 
 
 def lagquad(n: int) -> float:
-    """
-    Calculate the sample points and weights for Gauss-Laguerre quadrature.
+    """Calculate the sample points and weights for Gauss-Laguerre quadrature.
 
     Parameters
     ----------
@@ -84,14 +82,14 @@ def lagquad(n: int) -> float:
 
     # first we need to bound each root;
     # find subdivisions where the objective func changes sign
-    linspace = np.linspace(0, n + (n-1*np.sqrt(n)), n*20)
+    linspace = np.linspace(0, n + (n - 1 * np.sqrt(n)), n * 20)
     mesh = (objective(x) for x in linspace)
 
     prev_point = next(mesh)
     root_bounds = []
     for i, point in enumerate(mesh):
         if sign(prev_point) != sign(point):
-            root_bounds.append((linspace[i], linspace[i+1]))
+            root_bounds.append((linspace[i], linspace[i + 1]))
         prev_point = point
 
     if len(root_bounds) < n:
@@ -101,8 +99,10 @@ def lagquad(n: int) -> float:
     for a, b in root_bounds:
         root, result = brentq(objective, a, b, full_output=True)
         if not result.converged:
-            warnings.warn(f"lagquad failed to find root between {a} and {b}. "
-                          "even though there is a sign change on that interval!")
+            warnings.warn(
+                f"lagquad failed to find root between {a} and {b}. "
+                "even though there is a sign change on that interval!"
+            )
         roots.append(root)
 
     weights = [(x / ((n + 1) * mp.laguerre(n + 1, 0, x)) ** 2) for x in roots]

@@ -18,7 +18,7 @@ def plot_ritz(
     ritz_results: Dict[int, np.array]
         A dictionary with keys corresponding to Ritz matrix size, and
         values corresponding to the eigenvalues of the matrix of that size.
-    dbm = int|None, default None
+    dbm: int or None, default None
         If not None, removes all datapoints with imaginary part smaller
         than `dbm`.
 

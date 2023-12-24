@@ -6,7 +6,7 @@ import numpy as np
 from pyfilon import filon_fun_iexp
 
 from specpol.common import generate_matrix
-from specpol.operators import Operator
+from specpol.operator import Operator
 
 
 # pylint: disable=invalid-name
@@ -70,8 +70,7 @@ def ptb_ritz(
     func: Callable,
     matrix_size: int,
     quad_mesh_size: int,
-    *,
-    dbm: bool,
+    **settings: dict,
 ) -> np.array:
     r"""Approximate the spectrum of a perturbed multiplication operator on L^2(0, 1).
 
@@ -86,9 +85,11 @@ def ptb_ritz(
     quad_mesh_size: int
         The size of the mesh used for quadrature.
         Must be an odd integer greater than 1.
-    dbm: bool
-        Whether to add a dissipative barrier to show that the eigenvalue
-        created by the perturbation is indeed a real eigenvalue.
+    settings:
+        dbm: Callable
+            Add a dissipative barrier to the operator; this is a function
+            of the form $i*\gamma*f(x)$ where f is a function with compact
+            support.
 
     Returns
     -------
@@ -104,15 +105,16 @@ def ptb_ritz(
 
     # we have a factor of 2 in the integrand to account for the
     # sqrt(2) attached to each sin(n pi x)
-    # the 1j term is a dissipative barrier
+    dissipative_barrier = settings.get("dbm", lambda x: 0)
+
     @lru_cache(maxsize=matrix_size)
     def integrand(n: int) -> Callable:
         if n == 0:  # need to separate out this case to avoid a divide by 0
-            return lambda x: func(x) + phi_squared + 1j * (dbm is True and abs(n) <= 25)
+            return lambda x: func(x) + phi_squared + dissipative_barrier(x)
         return lambda x: (
             func(x) * np.exp(2j * n * np.pi * x)
             + -1j * (-1 + np.exp(2j * n * np.pi)) / (2 * np.pi * n) * phi_squared
-            + 1j * (dbm is True and abs(n) <= 25) * np.exp(2j * n * np.pi * x)
+            + dissipative_barrier(x) * np.exp(2j * n * np.pi * x)
         )
 
     def entry_func(i: int, j: int) -> complex:
