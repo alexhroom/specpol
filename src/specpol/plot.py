@@ -1,9 +1,11 @@
 """Plotting of approximations."""
-from typing import Dict
+from typing import Callable, Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import colormaps
+
+from specpol.algebra import OrthonormalBasis
 
 
 def plot_ritz(
@@ -66,3 +68,11 @@ def plot_ritz(
     )
 
     return fig, ax1, ax2
+
+
+def plot_eigenfunction(func: Callable, val: complex, onb: OrthonormalBasis):
+    """Plot an eigenfunction given an orthonormal basis."""
+    vector = [func(x) for x in np.linspace]
+    plt.plot(vector, label=f"{val}")
+    plt.legend()
+    plt.show()

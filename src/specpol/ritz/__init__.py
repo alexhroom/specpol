@@ -1,4 +1,5 @@
 """Module for Ritz approximation of operators."""
+from specpol.ritz.discrete import ritz_tridiag, supercell
 from specpol.ritz.multiplication import ptb_ritz, ritz_bounded_L2
 from specpol.ritz.sturmliouville import sturm_liouville_bdd, sturm_liouville_halfline
 
@@ -7,4 +8,6 @@ __all__ = [
     "ptb_ritz",
     "sturm_liouville_bdd",
     "sturm_liouville_halfline",
+    "ritz_tridiag",
+    "supercell",
 ]

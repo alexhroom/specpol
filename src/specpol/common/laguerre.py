@@ -1,10 +1,9 @@
 """Generalised Laguerre polynomials."""
-import warnings
 from functools import lru_cache
 
 import mpmath as mp
-import numpy as np
-from scipy.optimize import brentq
+from scipy.optimize import newton
+from scipy.special import jn_zeros
 
 
 @lru_cache(maxsize=None)
@@ -72,39 +71,34 @@ def lagquad(n: int) -> float:
         The result of the integral.
     """
 
-    # we need arbitrary precision or the quadrature falls apart
-    # at high n; use mpmath arbitrary-precision Laguerre polys
-    def objective(x: float) -> float:
-        return mp.laguerre(n, 0, x)
+    # the function and its derivatives for Halley's method
+    # we use arbitrary precision as regular isn't good enough here!
+    def objective(x):
+        return float(mp.laguerre(n, 0, x))
 
-    def sign(x: float) -> float:
-        return -1 if x < 0 else 1
+    def fprime(x):
+        return -float(mp.laguerre(n - 1, 1, x))
 
-    # first we need to bound each root;
-    # find subdivisions where the objective func changes sign
-    linspace = np.linspace(0, n + (n - 1 * np.sqrt(n)), n * 20)
-    mesh = (objective(x) for x in linspace)
+    def fprime2(x):
+        return float(mp.laguerre(n - 2, 2, x))
 
-    prev_point = next(mesh)
-    root_bounds = []
-    for i, point in enumerate(mesh):
-        if sign(prev_point) != sign(point):
-            root_bounds.append((linspace[i], linspace[i + 1]))
-        prev_point = point
+    # the zeroes of the Laguerre polynomial can be approximated by the zeroes
+    # of the Bessel function, as accurate as 5sf
+    # (see e.g Abramowitz and Stegun §22.16)
+    bessel_zeroes = jn_zeros(0, n)
 
-    if len(root_bounds) < n:
-        warnings.warn("lagquad failed to bound all roots for the polynomial.")
+    def approx_root(m):
+        """Approximate the m'th zero of L_n."""
+        return (bessel_zeroes[m] ** 2 / (4 * (n + 1 / 2))) * (
+            1 + (-2 + bessel_zeroes[m] ** 2) / (48 * (n + 1 / 2) ** 2)
+        )
 
     roots = []
-    for a, b in root_bounds:
-        root, result = brentq(objective, a, b, full_output=True)
-        if not result.converged:
-            warnings.warn(
-                f"lagquad failed to find root between {a} and {b}. "
-                "even though there is a sign change on that interval!"
-            )
-        roots.append(root)
+    # apply Halley's method
+    for m in range(1, n):
+        x0 = approx_root(m)
+        roots.append(newton(objective, x0, fprime=fprime, fprime2=fprime2, maxiter=n**2, tol=1e-12))
 
-    weights = [(x / ((n + 1) * mp.laguerre(n + 1, 0, x)) ** 2) for x in roots]
+    weights = [float(x / ((n + 1) * mp.laguerre(n + 1, 0, x)) ** 2) for x in roots]
 
     return roots, weights

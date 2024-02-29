@@ -1,7 +1,5 @@
 """Classes for operator theoretic objects."""
-from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Any, Callable, Tuple, TypeAlias
+from typing import Any, Callable, TypeAlias
 
 OperatorAction: TypeAlias = Callable[[Callable], Callable]
 

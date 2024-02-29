@@ -44,7 +44,7 @@ class OrthonormalBasis(ABC):
 
     @property
     @abstractmethod
-    def domain(self) -> Tuple(float, float):
+    def domain(self) -> Tuple[float, float]:
         """The domain that the ONB is an ONB for."""
 
         raise NotImplementedError
@@ -53,10 +53,10 @@ class OrthonormalBasis(ABC):
     def bounded(self) -> bool:
         """Whether the domain is bounded."""
 
-        return self.domain[0] > -float('inf') and self.domain[1] < float('inf')
+        return self.domain[0] > -float("inf") and self.domain[1] < float("inf")
 
     @property
     def semibounded(self) -> bool:
         """Whether the domain is semibounded."""
 
-        return self.domain[0] > -float('inf') or self.domain[1] < float('inf')
+        return self.domain[0] > -float("inf") or self.domain[1] < float("inf")

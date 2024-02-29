@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from specpol.common import generate_matrix
-from specpol.operator import OrthonormalBasis
+from specpol.onb import OrthonormalBasis
 
 if TYPE_CHECKING:
     import numpy as np
@@ -11,15 +11,15 @@ if TYPE_CHECKING:
 
 class Ritz(ABC):
     """
-    Handle the approximation of an operator by the Ritz method.
+    Handle the approximation of an operator by the Ritz-Galerkin method.
     """
 
-    def __init__(self: 'Ritz', onb: OrthonormalBasis):
+    def __init__(self: "Ritz", onb: OrthonormalBasis):
         """Class to handle Ritz approximation of an operator."""
         self.onb = onb
 
     @abstractmethod
-    def entry_func(self: 'Ritz', i: int, j: int) -> complex:
+    def entry_func(self: "Ritz", i: int, j: int) -> complex:
         """
         Calculate an entry of the Ritz matrix.
 
@@ -32,7 +32,7 @@ class Ritz(ABC):
         """
         raise NotImplementedError
 
-    def ritz_matrix(self: 'Ritz', size: int) -> 'np.array':
+    def ritz_matrix(self: "Ritz", size: int) -> "np.array":
         """Calculate the Ritz matrix of a given size for the operator."""
         return generate_matrix(
             self.entry_func,
