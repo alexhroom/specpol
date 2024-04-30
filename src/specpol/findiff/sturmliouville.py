@@ -3,6 +3,8 @@ from typing import Callable
 
 import numpy as np
 
+from specpol.common import Eigenpairs
+
 
 def sturm_liouville(
     potential: Callable,
@@ -72,5 +74,5 @@ def sturm_liouville(
     eigenvalues, eigenvectors = np.linalg.eig(scheme_matrix)
 
     if settings.get("vectors", False):
-        return eigenvalues, eigenvectors
+        return Eigenpairs(eigenvalues, eigenvectors)
     return eigenvalues

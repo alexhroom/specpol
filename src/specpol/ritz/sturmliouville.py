@@ -68,8 +68,8 @@ def sturm_liouville_bdd(
 
     def entry_func(i: int, j: int) -> complex:
         return (
-            cot_alpha
-            - cot_beta
+            - cot_alpha
+            + cot_beta
             + filon_fun_iexp(integrand(i, j), a, b, -2 * j * np.pi / domain_len, quad_mesh_size)
         )
 
@@ -150,7 +150,7 @@ def sturm_liouville_halfline(
     cot_alpha = 1 / np.tan(alpha)
 
     def entry_func(i: int, j: int) -> complex:
-        return cot_alpha * laguerre(i, 0, 0) * laguerre(j, 0, 0) + sum(
+        return - cot_alpha * laguerre(i, 0, 0) * laguerre(j, 0, 0) + sum(
             integrand(i, j)(sample_points) * weights
         )
 

@@ -7,30 +7,34 @@ from scipy.special import jn_zeros
 
 
 @lru_cache(maxsize=None)
-def laguerre(n: int, a: float, x: complex) -> complex:
-    """Calculate the associated Laguerre polynomial L_n^a(x).
+def laguerre(n, a, x):
+    return complex(mp.laguerre(n, a, x))
 
-    Parameters
-    ----------
-    n: int
-        the order of the Laguerre polynomial.
-    a: float
-        the generalised alpha-parameter of the Laguerre polynomial.
-    x: complex
-        the value at which the polynomial is evaluated.
-
-    Returns
-    -------
-    complex
-        The Laguerre polynomial L_n^a evaluated at x.
-    """
-    if n == 0:
-        return 1
-    if n == 1:
-        return -x + a + 1
-    if n == 2:  # noqa: PLR2004
-        return x**2 / 2 - (a + 2) * x + (a + 1) * (a + 2) / 2
-    return (2 + (a - 1 - x) / n) * laguerre(n - 1, a, x) - (1 + (a - 1) / n) * laguerre(n - 2, a, x)
+#@lru_cache(maxsize=None)
+#def laguerre(n: int, a: float, x: complex) -> complex:
+#    """Calculate the associated Laguerre polynomial L_n^a(x).
+#
+#    Parameters
+#    ----------
+#    n: int
+#        the order of the Laguerre polynomial.
+#    a: float
+#        the generalised alpha-parameter of the Laguerre polynomial.
+#    x: complex
+#        the value at which the polynomial is evaluated.
+#
+#    Returns
+#    -------
+#    complex
+#        The Laguerre polynomial L_n^a evaluated at x.
+ #   """
+ #   if n == 0:
+ #       return 1
+ #   if n == 1:
+ #       return -x + a + 1
+ #   if n == 2:  # noqa: PLR2004
+ #       return x**2 / 2 - (a + 2) * x + (a + 1) * (a + 2) / 2
+  #  return (2 + (a - 1 - x) / n) * laguerre(n - 1, a, x) - (1 + (a - 1) / n) * laguerre(n - 2, a, x)
 
 
 def lagdiff(n: int, a: float, x: complex, *, degree: int) -> complex:
