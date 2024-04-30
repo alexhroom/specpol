@@ -1,7 +1,7 @@
 # specpol
 This package contains functions and algorithms for the 
 approximation of operator spectra and analysis of spectral pollution, written for 
-my masters' thesis (at [https://github.com/alexhroom/thesis]). 
+my masters' thesis (at https://github.com/alexhroom/thesis). 
 
 It is functional as a software package (i.e. it is `pip` installable)
 and the algorithms available give the expected answers, but it is
